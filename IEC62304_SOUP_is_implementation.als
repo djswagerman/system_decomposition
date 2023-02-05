@@ -14,15 +14,16 @@ sig System {
 }
 fact { all ci : CompositeItem | #(ci.subdividesInto) > 1 }
 
-sig SOUP extends Item {
+sig SOUP  {
 	subSOUP: SOUP
 }
-fact { no s: SOUP | s in s.^subSOUP}
+fact { no soup: SOUP | soup in soup.^subSOUP}
+
 
 
 sig Unit extends Item {
-	isImplementedWith : SOUP
+	isImplementedWith : set SOUP
 }
 
-pred show (s : System) {}
-run {} for 6 but exactly 2 System
+pred show (s : SOUP) {#SOUP > 2}
+run {} for 10 but 2 SOUP
