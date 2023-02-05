@@ -17,8 +17,12 @@ fact { all ci : CompositeItem | #(ci.subdividesInto) > 1 }
 sig SOUP  {
 	subSOUP: SOUP
 }
+<<<<<<< HEAD
 fact { no soup: SOUP | soup in soup.^subSOUP}
 
+=======
+fact { no s: SOUP | s in s.subSOUP}
+>>>>>>> b64085b (changed IEC62304_SOUP_is_implementation)
 
 
 sig Unit extends Item {

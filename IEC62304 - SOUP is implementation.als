@@ -1,12 +1,13 @@
-abstract sig AbstractItem {
-}
+abstract sig AbstractItem {}
 
 sig SoftwareItem extends AbstractItem
 {
 	subItems : set AbstractItem
 }
 sig SoftwareSystem extends SoftwareItem {}
-sig SOUP extends AbstractItem {}
+sig SOUP extends AbstractItem {
+	subSOUPs : set SOUP
+}
 
 sig Unit extends AbstractItem
 {
@@ -19,22 +20,22 @@ fact
 	no i : AbstractItem | i in i.^subItems
 }
 
-// A system is never a subitem
+// A SoftwareSystem is never in a subitem
 fact 
 {
 	no s : SoftwareSystem | some i : AbstractItem | s in i.subItems
 }
 
-// All abstractitems are part of a system (with the execption of 'systems')
+// All abstractitems are part of a system (with the execption of SoftwareSystem)
 fact 
 {
-	all i : AbstractItem - SoftwareSystem - SOUP | some s : SoftwareSystem | i in s.^subItems
+	all i : AbstractItem - SoftwareSystem | some s : SoftwareSystem | i in s.^subItems
 }
 
-// SOUP is part of one or more units
+// A system is never directly subdivided towards Units
 fact 
 {
-	all s : SOUP | some u: Unit | s in u.implementedWithSOUP
+	all u : Unit | no sys : SoftwareSystem | u in sys.subItems
 }
 
 // A system is never directly subdivided to SOUP
@@ -43,16 +44,11 @@ fact
 	all s : SOUP | no sys : SoftwareSystem | s in sys.subItems
 }
 
-// A system is never directly subdivided to Units
-fact 
-{
-	all u : Unit | no sys : SoftwareSystem | u in sys.subItems
-}
 
-// SOUP is never part of a software Item
+// SOUP is part of one or more units
 fact 
 {
-	all s : SOUP | no si : SoftwareItem | s in si.subItems
+	all s : SOUP | some u: Unit | s in u.implementedWithSOUP
 }
 
 // Items have a minumum of 2 subItems
@@ -60,5 +56,6 @@ fact {
 	all i : SoftwareItem | #(i.subItems) > 2
 }
 
-pred show (s : SoftwareSystem) {}
-run show for 10 but exactly 3 SOUP
+
+pred show (s : SoftwareSystem) {#SOUP > 2 and #SoftwareItem > 2}
+run show for 10

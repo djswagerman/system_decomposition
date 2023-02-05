@@ -5,7 +5,10 @@ sig SoftwareItem extends AbstractItem
 	subItems : set AbstractItem
 }
 sig SoftwareSystem extends SoftwareItem {}
-sig SOUP extends SoftwareItem {}
+
+sig SOUP extends AbstractItem {
+	subSOUPs : set SOUP
+}
 
 sig Unit extends AbstractItem {}
 
@@ -13,7 +16,7 @@ sig Unit extends AbstractItem {}
 // No abstract item can (acyclic) include itselve
 fact 
 {
-	no i : AbstractItem | i in i.^subItems
+	no i : SoftwareItem | i in i.^subItems
 }
 
 // A SoftwareSystem is never in a subitem
@@ -41,16 +44,9 @@ fact
 }
 
 
-// SOUP can only be further subdivided to SOUP (and not to units)
-fact 
-{
-	all s : SOUP | no i : AbstractItem | i in s.subItems and i not in SOUP
-}
-
-
 // Items have a minumum of 2 subItems
 fact {
-	all i : SoftwareItem - SOUP | #(i.subItems) > 2
+	all i : SoftwareItem | #(i.subItems) > 2
 }
 
 
