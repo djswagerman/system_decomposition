@@ -2,6 +2,10 @@ sig MedicalDevice {
 	isRealizedWith : one CyberPhysicalSystem
 }
 
+sig SAMD {
+	isRealizedWith : one SoftwareSystem
+}
+
 abstract sig CyberPhysicalItem {}
 abstract sig CyberPhysicalAggregateItem extends CyberPhysicalItem {}
 
@@ -39,6 +43,13 @@ sig SOUP extends AggregateItem {
 	subSOUP : set SOUP
 }
 
+
+// All SAMD's are realized with exactly one SoftwareSystem
+fact 
+{
+	all p : SAMD | one ss : SoftwareSystem | p.isRealizedWith = ss
+}
+
 // for all SoftwareSystem there exist at least one CompositeItem
 fact
 {
@@ -46,17 +57,20 @@ fact
 }
 
 
-// for all CompositeItem belong to at least one SoftwareSystem
+// for all CompositeItem belong to at least one cyberphysical system
 fact
 {
-	all  ci : CompositeItem | some s : SoftwareSystem | ci in s.topItems
+	all  ci : CyberPhysicalItem - CyberPhysicalSystem | 
+		some cps : CyberPhysicalSystem| ci in cps.^(topLevel + subSystems + topItems + subItems)
 }
 
+
+
 // all SOUP and Unit items are part of some CompositeItem
-fact
-{
-	all u : SOUP + Unit | some ci : CompositeItem | u in ci.subItems
-}
+//fact
+//{
+//	all u : SOUP + Unit | some ci : CompositeItem | u in ci.subItems
+//}
 
 // no CompositeItem is (transitely) sub item  of itself
 fact
@@ -69,7 +83,6 @@ fact
 {
 	no soup : SOUP | soup in soup.^subSOUP
 }
-
 
 // All medical devices are realized with exactly one CyberPhysicalSystem
 fact 
@@ -93,17 +106,6 @@ fact
 		(some cpcs : CyberPhysicalCompositeItem |  
 			some ss : MechanicalSubSystem + ElectronicalSubSystem | cpcs in cps.topLevel and ss in cpcs.^subSystems
 		)
-}
-
-// All CyberPhysicalAggregateItem's belong to 'something'
-fact 
-{
-	all cpa : CyberPhysicalAggregateItem |
-		// either a CyberPhysicalSystem
-		some cps : CyberPhysicalSystem | cpa in cps.topLevel or
-
-		// or (transitevely) in a CyberPhysicalCompositeItem that's
-		some cpcs : CyberPhysicalCompositeItem |  cpcs in cps.topLevel  and cpa in cpcs.^subSystems
 }
 
 // No CyberPhysicalCompositeItem can transitively include itself
@@ -130,30 +132,11 @@ fact {
 }
 
 fact {
-	all a : SoftwareItem |
-		some c1 : CyberPhysicalCompositeItem, c2 : CompositeItem
-			a in c1.^(subItems + topItems + subSystems + topLevel)  and a in c2.^(subItems + topItems + subSystems + topLevel)  implies c1= c2) or
+	all a : CyberPhysicalAggregateItem |
+		no ci1 : CyberPhysicalCompositeItem + CyberPhysicalSystem,  ci2 : AggregateItem + SoftwareSystem |
+			a in ci1.(subSystems + topLevel + subItems + topItems + isImplementedWithSOUP) and
+			a in ci2.(subSystems + topLevel + subItems + topItems + isImplementedWithSOUP) 
 }
 
-//fact {
-//	all a1, a2 : CyberPhysicalItem, s : CyberPhysicalSystem | 
-//		a1 in s.^(subItems + topItems + subSystems + topLevel) and
-//		a2 in a1.(subItems + topItems + subSystems + topLevel) implies 
-//			not (a2 in (a1.^(subItems + topItems + subSystems + topLevel) - a1.(subItems + topItems + subSystems + topLevel)))
-//}
-
-//fact
-//{
-//	no a1, a2, a3 : CyberPhysicalItem | 
-//		a2 in a1.^(subItems + topItems + subSystems + topLevel) and 
-//		a3 in a2.^(subItems + topItems + subSystems + topLevel) and
-//		a3 in a1.(subItems + topItems + subSystems + topLevel) 
-//}
-//
-
-//fact{
-//	all i : CyberPhysicalAggregateItem  | one c : CyberPhysicalCompositeItem +  CyberPhysicalSystem | i in c.(subItems + topItems + subSystems + topLevel) 
-//}
-
-pred show (p : MedicalDevice) {#ElectronicalSubSystem > 0 and #MechanicalSubSystem > 0 and #CyberPhysicalCompositeItem > 1 and #Unit > 1 }
-run show for 10 but 1 MedicalDevice
+pred show (p : MedicalDevice, samd : SAMD) {#SOUP > 2}
+run show for 10 but  exactly 1 SAMD
