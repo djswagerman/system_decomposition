@@ -56,16 +56,6 @@ fact
 	all s: SoftwareSystem | some ci : CompositeItem | ci in s.topItems
 }
 
-
-// for all CompositeItem belong to at least one cyberphysical system
-fact
-{
-	all  ci : CyberPhysicalItem - CyberPhysicalSystem | 
-		some cps : CyberPhysicalSystem| ci in cps.^(topLevel + subSystems + topItems + subItems)
-}
-
-
-
 // all SOUP and Unit items are part of some CompositeItem
 //fact
 //{
@@ -106,6 +96,14 @@ fact
 		(some cpcs : CyberPhysicalCompositeItem |  
 			some ss : MechanicalSubSystem + ElectronicalSubSystem | cpcs in cps.topLevel and ss in cpcs.^subSystems
 		)
+}
+
+
+// for all CyberPhysicalItem's belong to at least one cyberphysical system
+fact
+{
+	all  ci : CyberPhysicalItem - CyberPhysicalSystem | 
+		some cps : CyberPhysicalSystem| ci in cps.^(topLevel + subSystems + topItems + subItems)
 }
 
 // No CyberPhysicalCompositeItem can transitively include itself

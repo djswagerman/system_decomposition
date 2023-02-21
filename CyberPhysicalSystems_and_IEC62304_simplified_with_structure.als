@@ -18,7 +18,7 @@ sig SoftwareMedicalDevice {
 
 abstract sig  Item
 {
-	function : one Function,
+	function : one Function
 }
 
 sig CompositeItem extends Item
@@ -28,20 +28,32 @@ sig CompositeItem extends Item
 
 sig System extends CompositeItem {}
 
-sig Unit extends Item
+sig Unit extends Item {}
 {
-	usesSOUPLibraries : set SOUP
+	function not in Software + Cyberphysical
 }
 
-sig Computer extends Item
+sig SoftwareUnit extends Unit
 {
-}
-
-sig SOUP extends Item
-{
+	usesSOUPLibraries : set SOUPLibrary
 }
 {
 	function = Software
+}
+
+sig Computer extends Item {}
+{
+	function = Electronic
+}
+
+sig SOUP extends Item {}
+{
+	function = Software
+}
+
+sig SOUPLibrary {}
+{
+	some u : Unit | this in u.usesSOUPLibraries
 }
 
 // No composite can include itself
@@ -53,7 +65,7 @@ fact
 // All items, except for a system, belong to some system
 fact
 {
-	all i: Item - System|  some s : System | i in s.^subSystems
+	all i: Item - System | some s : System | i in s.^subSystems
 }
 
 // All items have one parent
@@ -90,28 +102,40 @@ fact
 				one c : Item | c = Computer and c in i.subSystems 
 }
 
-// All items, expect cyberphyscal systems, have only one parent
+// All descendants of a system, that have the same function as their parent, can't also be Systems (but are Units or Composites)
 fact
 {
-	all  i : Item | not (i in System and i.function = Cyberphysical) implies one c : CompositeItem | i in c.subSystems
+	all  s : System | all i : Item | i in s.^subSystems and s.function = i.function implies not i in System
 }
 
-// All systems
+// All descendants of a system, that have the same function as their parent, can't also be Systems (but are Units or Composites)
 fact
 {
-	all  s : System | some i : Item | i in s.subSystems implies i.function != s.function
+	no  s : System, md : MedicalDevice, samd : SoftwareMedicalDevice |
+		s.function =  Software and
+		s in md.realizedwith.^subSystems and
+		s = samd.realizedwith
 }
 
-pred show (i1, i2, i3, i4, i9 : Item, md : MedicalDevice)
- {
-	i1.function=Mechanical and 
-	i2.function=Software and
-	i3.function = Control and 
-	i4.function = Electronic and 
-	i9.function =Cyberphysical  and
-	i1 in i9.^subSystems and 
-	i2 in i9.^subSystems and 
-	i3 in i9.^subSystems and 
-	i4 in i9.^subSystems
+fact
+{
+	all s : System | s.funtion = Cyberphysical implies
+		some md : MedicalDevice | md.realizedwith = s
 }
-run show for 9 but exactly 1 MedicalDevice
+
+pred show (i1, i2, i3, i4, i9 : Item, md : MedicalDevice, samd : SoftwareMedicalDevice)
+{
+	(
+		i1.function = Electronic and
+		i2.function = Software and
+		i9 = md.realizedwith and
+		i1 in i9.^subSystems and
+		i2 in i9.^subSystems
+	) or
+	(
+		i1.function = Software and
+		i9 = samd.realizedwith and
+		i1 in i9.^subSystems
+	)
+}
+run show for 15 but exactly  1 MedicalDevice, exactly 1 SoftwareMedicalDevice
