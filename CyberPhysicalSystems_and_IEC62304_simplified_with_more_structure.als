@@ -35,11 +35,6 @@ sig CyberPhysicalSystem extends System {}
 	function = Cyberphysical
 }
 
-//sig SoftwareSystemInMD extends CompositeItem {}
-//{
-//	function = Software
-//}
-
 sig SoftwareSystem extends System {}
 {
 	function = Software
