@@ -154,7 +154,7 @@ fact
 pred show (md : CyberPhysicalMedicalDevice, i1, i2, i3, i4 : Item) 
 {
 	(
-		i1 in SoftwareSystem and
+		i1 in CompositeItem and i1.function = Software and
 		i1 in md.realizedwithCyberPhysicalSystem.^subSystems
 	)
 }

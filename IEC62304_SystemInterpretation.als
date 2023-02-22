@@ -116,7 +116,7 @@ fact
 // A SoftwareSystem can't include a Software System
 fact
 {
-	no s1, s2 : SoftwareSystem | s1 in s2.subSystems
+	no s1 : SoftwareSystem, s2 : CompositeItem | s1 in s2.subSystems and s2.function = Software
 }
 
 // All items, expect systems, have only one parent
