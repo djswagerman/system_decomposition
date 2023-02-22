@@ -84,20 +84,16 @@ sig SOUPLibary {}
 // All SoftwareSystems realize exactly one SoftwareMedicalDevice
 fact
 {
-	all s : SoftwareSystem |
+	all  s : SoftwareSystem | 
 		(
-			one samd1 : SoftwareMedicalDevice |  s in samd1.realizedwithSoftwareSystem or
-			one cps1 : CyberPhysicalSystem |  s in cps1.^subSystems  
+			lone samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem or
+			lone cps : CyberPhysicalSystem | s in cps.^subSystems
+		) and not
+		(
+			some samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem and
+			some cps : CyberPhysicalSystem | s in cps.^subSystems
 		)
 }
-
-fact
-{
-	no s : SoftwareSystem |
-		some samd1 : SoftwareMedicalDevice |  s in samd1.realizedwithSoftwareSystem and
-		some cps1 : CyberPhysicalSystem |  s in cps1.^subSystems  
-}
-
 
 // All CyberPhysicalSystem realize exactly one CyberPhysicalMedicalDevice
 fact
@@ -117,30 +113,18 @@ fact
 	no s : CyberPhysicalSystem | some c : CompositeItem | s in c.subSystems
 }
 
+// A SoftwareSystem can't include a Software System
+fact
+{
+	no s1, s2 : SoftwareSystem | s1 in s2.subSystems
+}
+
 // All items, expect systems, have only one parent
 // (systems do not have a parent)
-//fact
-//{
-//	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
-//}
-
-// The rule
-// All items, except systems, belong to exactly one system
-// Becomes problematic when an item can belong to a software system and at the same time to the cyberphysicalsystem that includes that software system
-//fact
-//{
-//	all  i : Item - System | one s : System |  i in s.^subSystems
-//}
-
-// The rule
-// All items, except systems, belong to exactly one system
-// Becomes problematic when an item can belong to a software system and at the same time to the cyberphysicalsystem that includes that software system
-//fact
-//{
-//	all  i : Item |  i.function = Software implies 
-//		one s : SoftwareSystem | i in s.^subSystems
-//}
-
+fact
+{
+	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
+}
 
 // Software, Mechanical and Electronic subsystems, can only be decomposed within their function 
 // (e.g.  their 'children' have the same function
@@ -178,8 +162,9 @@ fact
 pred show (md : CyberPhysicalMedicalDevice, i1, i2, i3, i4 : Item) 
 {
 	(
-		i1 in SoftwareSystem
+		i1 in SoftwareSystem and
+		i1 in md.realizedwithCyberPhysicalSystem.^subSystems
 	)
 }
 
-run show for 7 but  1 CyberPhysicalMedicalDevice
+run show for 10 but exactly 1 CyberPhysicalMedicalDevice,  exactly 1 SoftwareMedicalDevice
