@@ -1,4 +1,4 @@
-enum Function {Software, SOUP, Electronic, Mechanical, Cyberphysical, Control}
+enum Function {Software, Electronic, Mechanical, Cyberphysical, Control}
 enum TopLevel {Yes, No}
 
 abstract sig MedicalDevice {}
@@ -50,6 +50,15 @@ sig SoftwareSystem extends System {}
 	function = Software
 }
 
+sig SOUP extends Item
+{
+	subSOUP : set SOUP
+}
+{
+	function = Software
+	this not in subSOUP
+}
+
 // A unit is not further subdivided. There are three cyberphysical unit types
 sig Unit extends Item {}
 {
@@ -62,7 +71,7 @@ sig SoftwareUnit extends Item
 	usesSOUPLibary : set SOUPLibary
 }
 {
-	function in Software + SOUP
+	function in Software
 }
 
 // A Computer is a special sort of Electronic Unit
@@ -119,8 +128,14 @@ fact
 // (e.g.  their 'children' have the same function
 fact
 {
-	all i : Item |  all c : Item | (i.function in Software+Electronic+Mechanical+SOUP) and c in i.^subSystems implies c.function = i.function
+	all i : Item |  all c : Item | (i.function in Software+Electronic+Mechanical) and c in i.^subSystems implies c.function = i.function
 }
+
+// SOUP can only be decomposed to SOUP
+//fact
+//{
+//	all s : SOUP |  all c : Item | c in s.^subSystems implies c in SOUP
+//}
 
 // All composite Items have at least two subsystems
 fact
@@ -150,17 +165,9 @@ fact
 
 pred show (md : CyberPhysicalMedicalDevice, i1, i2, i3, i4 : Item) 
 {
-	(
-		i2 in CompositeItem and i2.function = Software and
-		i2 in md.realizedwithCyberPhysicalSystem.^subSystems
-	) or
-	(
-		i1 in SoftwareSystem and
-		i1 in md.realizedwithCyberPhysicalSystem.^subSystems 
-	) or
-	(
-		i3.function in SOUP
-	)
+	i1 in SOUP and i2 in i1.subSOUP and
+	i3 in SoftwareSystem and
+	i3 in md.realizedwithCyberPhysicalSystem.^subSystems
 }
 
 run show for 8 but exactly 1 CyberPhysicalMedicalDevice,  exactly 1 SoftwareMedicalDevice
