@@ -82,10 +82,21 @@ sig SOUPLibary {}
 
 
 // All SoftwareSystems realize exactly one SoftwareMedicalDevice
+
 fact
 {
-	all  s : SoftwareSystem | one samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem
+	all  s : SoftwareSystem | 
+		(
+			one samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem or
+			no cps : CyberPhysicalSystem | s in cps.^subSystems
+		) or
+
+		(
+			no samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem or
+			one cps : CyberPhysicalSystem | s in cps.^subSystems
+		) 
 }
+
 
 // All CyberPhysicalSystem realize exactly one CyberPhysicalMedicalDevice
 fact
@@ -99,64 +110,31 @@ fact
 	no i : Item |  i in i.^subSystems
 }
 
-// A System is never a subsystem
+// A CyberPhysicalSystem is never a subsystem
 fact
 {
-	no s : System | some c : CompositeItem | s in c.subSystems
+	no s : CyberPhysicalSystem | some c : CompositeItem | s in c.subSystems
 }
+
 
 // All items, expect systems, have only one parent
 // (systems do not have a parent)
 fact
 {
-	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
+	all  i : Item - CyberPhysicalSystem | one c : CompositeItem |  i in c.subSystems
 }
 
 // All items, except systems, belong to exactly one system
 fact
 {
-	all  i : Item - System | one s : System |  i in s.^subSystems
+	all  i : Item - CyberPhysicalSystem | one s : CyberPhysicalSystem |  i in s.^subSystems
 }
 
-// Software, Mechanical and Electronic subsystems, can only be decomposed within their function 
-// (e.g.  their 'children' have the same function
-fact
-{
-	all i : Item |  all c : Item | (i.function in Software+Electronic+Mechanical ) and c in i.^subSystems implies c.function = i.function
-}
-
-// All composite Items have at least two subsystems
-fact
-{
-	all  i : CompositeItem | #(i.subSystems) >= 2
-}
-
-// Control systems are only subdivided in software or computers
-fact
-{
-	all  i : Item | 
-			all c : Item | i.function = Control and
-				c in i.^subSystems implies (c.function = Software or c in Computer)
-}
-
-// All software items that have a 'non software' parent, need to have a sibling that is a computer
-// This rule ensures that the 'highest' level software item, has at least one computer as a sibling that it could run on.
-fact
-{
-	all  i : Item, p : CompositeItem |
-		{
-			i.function = Software
-			p.function in Cyberphysical + Control
-			i in p.subSystems
-		} implies one c : Computer | c in p.subSystems
-}
-
-pred show (md : CyberPhysicalMedicalDevice, i1, i2, i3, i4 : Item) 
+pred show (md : CyberPhysicalMedicalDevice, samd : SoftwareMedicalDevice, i1, i2, i3, i4 : Item) 
 {
 	(
-		i1 in SoftwareSystem and
-		i1 in md.realizedwithCyberPhysicalSystem.^subSystems
+		i1 in SoftwareSystem
 	)
 }
 
-run show for 10 but exactly 1 CyberPhysicalMedicalDevice,  exactly 1 SoftwareMedicalDevice
+run show for 10 but exactly 1 CyberPhysicalMedicalDevice
