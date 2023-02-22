@@ -1,4 +1,5 @@
 enum Function {Software, SOUP, Electronic, Mechanical, Cyberphysical, Control}
+enum TopLevel {Yes, No}
 
 abstract sig MedicalDevice {}
 
@@ -8,7 +9,7 @@ sig CyberPhysicalMedicalDevice extends MedicalDevice
 	realizedwithCyberPhysicalSystem : one CyberPhysicalSystem
 }
 {
-	one s : CyberPhysicalSystem | realizedwithCyberPhysicalSystem = s
+	one s : CyberPhysicalSystem | realizedwithCyberPhysicalSystem = s and s.isTopLevel = Yes
 }
 
 // A SoftwareMedicalDevice is realized with a SoftwareSystem
@@ -17,7 +18,7 @@ sig SoftwareMedicalDevice  extends MedicalDevice
 	realizedwithSoftwareSystem: one SoftwareSystem
 }
 {
-	one s : SoftwareSystem | realizedwithSoftwareSystem = s
+	one s : SoftwareSystem | realizedwithSoftwareSystem = s and s.isTopLevel = Yes
 }
 
 // An Item is not directly instantiated, and has a 'function' or 'discipline'
@@ -33,7 +34,9 @@ sig CompositeItem extends Item
 }
 
 // A system is a special CompositeItem (no parent)
-abstract sig System extends CompositeItem {}
+abstract sig System extends CompositeItem {
+	isTopLevel : TopLevel
+}
 
 // There are two types of system, a CyberPhysicalSystem...
 sig CyberPhysicalSystem extends System {}
@@ -78,13 +81,13 @@ sig SOUPLibary {}
 // All SoftwareSystems realize exactly one SoftwareMedicalDevice
 fact
 {
-	all  s : SoftwareSystem | one samd : SoftwareMedicalDevice |  s in samd.realizedwithSoftwareSystem
+	all  s : SoftwareSystem | one samd : SoftwareMedicalDevice |  s.isTopLevel = Yes implies s in samd.realizedwithSoftwareSystem
 }
 
 // All CyberPhysicalSystem realize exactly one CyberPhysicalMedicalDevice
 fact
 {
-	all  s : CyberPhysicalSystem | one md : CyberPhysicalMedicalDevice |  s in md.realizedwithCyberPhysicalSystem
+	all  s : CyberPhysicalSystem | one md : CyberPhysicalMedicalDevice |   s.isTopLevel = Yes implies s in md.realizedwithCyberPhysicalSystem
 }
 
 // No item can include itself
@@ -93,32 +96,31 @@ fact
 	no i : Item |  i in i.^subSystems
 }
 
-// A System is never a subsystem
+// A Top level system is never a subsystem
 fact
 {
-	no s : System | some c : CompositeItem | s in c.subSystems
+	no s : System | some c : CompositeItem | s.isTopLevel = Yes and s in c.subSystems
 }
 
-// All items, expect systems, have only one parent
+// All items, expect top level systems, have only one parent
 // (systems do not have a parent)
 fact
 {
-	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
+	all  i : Item  | not (i in System and i.isTopLevel = Yes)  implies lone c : CompositeItem |  i in c.subSystems
 }
 
-// All items, except systems, belong to exactly one system
+// All items, except top level systems, belong to exactly one system
 fact
 {
-	all  i : Item - System | one s : System |  i in s.^subSystems
+	all  i : Item  | not (i in System and i.isTopLevel = Yes)  implies one s : System | s.isTopLevel = Yes and  i in s.^subSystems
 }
 
 // Software, Mechanical and Electronic subsystems, can only be decomposed within their function 
 // (e.g.  their 'children' have the same function
 fact
 {
-	all i : Item |  all c : Item | (i.function in Software+Electronic+Mechanical+SOUP ) and c in i.^subSystems implies c.function = i.function
+	all i : Item |  all c : Item | (i.function in Software+Electronic+Mechanical+SOUP) and c in i.^subSystems implies c.function = i.function
 }
-
 
 // All composite Items have at least two subsystems
 fact
@@ -149,9 +151,16 @@ fact
 pred show (md : CyberPhysicalMedicalDevice, i1, i2, i3, i4 : Item) 
 {
 	(
-		i1 in CompositeItem and i1.function = Software and
-		i1 in md.realizedwithCyberPhysicalSystem.^subSystems
+		i2 in CompositeItem and i2.function = Software and
+		i2 in md.realizedwithCyberPhysicalSystem.^subSystems
+	) or
+	(
+		i1 in SoftwareSystem and
+		i1 in md.realizedwithCyberPhysicalSystem.^subSystems 
+	) or
+	(
+		i3.function in SOUP
 	)
 }
 
-run show for 10 but exactly 1 CyberPhysicalMedicalDevice,  exactly 1 SoftwareMedicalDevice
+run show for 8 but exactly 1 CyberPhysicalMedicalDevice,  exactly 1 SoftwareMedicalDevice
