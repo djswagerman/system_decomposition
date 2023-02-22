@@ -113,17 +113,26 @@ fact
 	no s : CyberPhysicalSystem | some c : CompositeItem | s in c.subSystems
 }
 
-// A SoftwareSystem can't include a Software System
-fact
-{
-	no s1 : SoftwareSystem, s2 : CompositeItem | s1 in s2.subSystems and s2.function = Software
-}
-
 // All items, expect systems, have only one parent
 // (systems do not have a parent)
 fact
 {
 	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
+}
+
+
+
+
+// All items, except CompositeItem, belong to exactly one system
+fact
+{
+	all  i : Item - System | one c : CompositeItem |  i in c.subSystems
+}
+
+// A SoftwareSystem can't include a Software System
+fact
+{
+	no s1 : SoftwareSystem, s2 : CompositeItem | s1 in s2.subSystems and s2.function = Software
 }
 
 // Software, Mechanical and Electronic subsystems, can only be decomposed within their function 
